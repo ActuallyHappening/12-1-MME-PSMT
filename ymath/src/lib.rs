@@ -24,7 +24,7 @@ pub fn trapezoidal_rule(
     let top_b = Scientific::try_from(top_b)?;
     let bottom_a = Scientific::try_from(bottom_a)?;
 
-    let width = (&top_b - &bottom_a).div_rpsp(&Scientific::from(number), precision)?;
+    let strip_delta = (&top_b - &bottom_a).div_rpsp(&Scientific::from(number), precision)?;
 
     let ends = &func(&bottom_a)? + &func(&top_b)?;
     let middle: Scientific = {
@@ -36,7 +36,7 @@ pub fn trapezoidal_rule(
         let mut sum = Scientific!(0);
         for m in multiples {
             let m = Scientific::from(m);
-            let x = &bottom_a + &(&m * &width.div_rpsp(&Scientific::from(number), precision)?);
+            let x = &bottom_a + &(&m * &strip_delta);
 						let strip_sum = func(&x)?;
             debug!(%m, ?strip_sum, "Computing");
             sum = &sum + &strip_sum;
@@ -46,7 +46,7 @@ pub fn trapezoidal_rule(
         sum
     };
 
-		let ret = &(width.div_rpsp(&Scientific!(2.0), precision))?
+		let ret = &(strip_delta.div_rpsp(&Scientific!(2.0), precision))?
             * &(&ends + &(&Scientific!(2.0) * &middle));
     Ok(
       (&ret).into()
