@@ -1,6 +1,5 @@
 use scientific::{Precision, Scientific};
 use tracing::debug;
-use tracing_subscriber::field::display;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -10,13 +9,13 @@ pub enum Error {
     ConvertError(#[from] scientific::ConversionError),
 }
 
-pub fn trapazoidal_rule(
+pub fn trapezoidal_rule(
     func: impl Fn(f64) -> f64,
     bottom_a: f64,
     top_b: f64,
     number: u16,
     precision: Precision,
-) -> Result<Scientific, Error> {
+) -> Result<f64, Error> {
     let func = |x: &Scientific| {
         let fin: f64 = x.into();
         let func_output = func(fin);
@@ -29,25 +28,47 @@ pub fn trapazoidal_rule(
 
     let ends = &func(&bottom_a)? + &func(&top_b)?;
     let middle: Scientific = {
-        let middle_num = number - 2;
-        let multiples = 1..number - 1;
-				assert_eq!(multiples.len(), middle_num as usize, "Multiples length is not equal to middle_num");
+        // let middle_num = number - 2;
+        let multiples = 1..number;
+				// assert_eq!(multiples.len(), middle_num as usize, "Multiples length is not equal to middle_num");
 
 
         let mut sum = Scientific!(0);
         for m in multiples {
-            debug!(%m, "Computing");
             let m = Scientific::from(m);
             let x = &bottom_a + &(&m * &width.div_rpsp(&Scientific::from(number), precision)?);
-            sum = &sum + &func(&x)?;
+						let strip_sum = func(&x)?;
+            debug!(%m, ?strip_sum, "Computing");
+            sum = &sum + &strip_sum;
         }
 
         debug!(%sum, "Finished sum");
         sum
     };
 
+		let ret = &(width.div_rpsp(&Scientific!(2.0), precision))?
+            * &(&ends + &(&Scientific!(2.0) * &middle));
     Ok(
-        &(width.div_rpsp(&Scientific!(2.0), precision))?
-            * &(&ends + &(&Scientific!(2.0) * &middle)),
+      (&ret).into()
     )
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_zero() {
+		let func = |_| 0.0;
+		let approx = trapezoidal_rule(func, 0.0, 10.0, 5, Precision::Digits(10)).unwrap();
+		assert_eq!(approx, 0.0);
+	}
+
+	#[test]
+	fn test_constant() {
+		let c = 6.9;
+		let func = |_| c;
+		let approx = trapezoidal_rule(func, 0.0, 10.0, 10, Precision::Digits(10)).unwrap();
+		assert_eq!(approx, c * 10.0);
+	}
 }
