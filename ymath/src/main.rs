@@ -54,5 +54,8 @@ fn main() {
 	let V_b = A_b * w * h * h_b;
 	info!(%A_b, %V_b);
 
+	let V_t = V_tl + V_m + V_b;
+	info!(%V_t, "Final computed volume");
+
 	info!("Finished");
 }
