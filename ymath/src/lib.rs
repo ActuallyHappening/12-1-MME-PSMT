@@ -30,16 +30,16 @@ pub fn trapazoidal_rule(
     let ends = &func(&bottom_a)? + &func(&top_b)?;
     let middle: Scientific = {
         let middle_num = number - 2;
+        let multiples = 1..number - 1;
+				assert_eq!(multiples.len(), middle_num as usize, "Multiples length is not equal to middle_num");
 
-        let multiples = (1..number - 1).into_iter();
+
         let mut sum = Scientific!(0);
         for m in multiples {
             debug!(%m, "Computing");
             let m = Scientific::from(m);
-            sum = &sum
-                + &func(
-                    &bottom_a + &(&m * &width.div_rpsp(&Scientific::from(number), precision)?),
-                );
+            let x = &bottom_a + &(&m * &width.div_rpsp(&Scientific::from(number), precision)?);
+            sum = &sum + &func(&x)?;
         }
 
         debug!(%sum, "Finished sum");

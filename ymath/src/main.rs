@@ -1,5 +1,7 @@
+use tracing::info;
+
 fn main() {
-	tracing_subscriber::init();
+	tracing_subscriber::fmt::init();
 
 	info!("Starting");
 }
