@@ -4,6 +4,7 @@ use scientific::Precision;
 use tracing::info;
 use ymath::trapezoidal_rule;
 
+#[allow(dead_code)]
 fn test_quadratic() {
 	let number = 10;
 	let precision = Precision::Digits(100);
