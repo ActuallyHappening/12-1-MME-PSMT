@@ -11,3 +11,7 @@ scientific = { version = "0.5.2", features = ["std"] }
 thiserror = "1.0.58"
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
+
+[features]
+default = ["debug"]
+debug = []
