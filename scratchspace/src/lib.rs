@@ -32,9 +32,7 @@ pub fn trapezoidal_rule_strip_num(
 	debug!(%bottom, %top);
 	let ends = &bottom + &top;
 	let middle: Scientific = {
-		// let middle_num = number - 2;
 		let multiples = 1..number;
-		// assert_eq!(multiples.len(), middle_num as usize, "Multiples length is not equal to middle_num");
 
 		let mut sum = Scientific!(0);
 
@@ -45,7 +43,7 @@ pub fn trapezoidal_rule_strip_num(
 			let m = Scientific::from(m);
 			let x = &bottom_a + &(&m * &strip_delta);
 			let strip_sum = func(&x)?;
-			trace!(%m, ?strip_sum, "Computing");
+			trace!(%m, %x, %strip_sum, "Computing func at x, func({}) = {}", x, func(&x)?);
 
 			#[cfg(feature = "debug")]
 			m_values.push(strip_sum.clone());
