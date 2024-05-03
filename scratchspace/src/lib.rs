@@ -24,13 +24,14 @@ pub fn trapezoidal_rule_strip_num(
 	let top_b = Scientific::try_from(top_b)?;
 	let bottom_a = Scientific::try_from(bottom_a)?;
 
-	let strip_delta = (&top_b - &bottom_a).div_rpsp(&Scientific::from(number), precision)?;
-	debug!(%strip_delta, %bottom_a, %top_b, "Beginning trapezoidal rule calculation");
+	let total_width = &top_b - &bottom_a;
+	let strip_width = total_width.div_rpsp(&Scientific::from(number), precision)?;
+	debug!(%strip_width, %bottom_a, %top_b, "Beginning trapezoidal rule calculation");
 
 	let bottom = func(&bottom_a)?;
 	let top = func(&top_b)?;
-	debug!(%bottom, %top);
 	let ends = &bottom + &top;
+	debug!(%bottom, %top, %ends, "Ends (E)");
 	let middle: Scientific = {
 		let multiples = 1..number;
 
@@ -41,7 +42,7 @@ pub fn trapezoidal_rule_strip_num(
 
 		for m in multiples {
 			let m = Scientific::from(m);
-			let x = &bottom_a + &(&m * &strip_delta);
+			let x = &bottom_a + &(&m * &strip_width);
 			let strip_sum = func(&x)?;
 			trace!(%m, %x, %strip_sum, "Computing func at x, func({}) = {}", x, func(&x)?);
 
@@ -54,15 +55,26 @@ pub fn trapezoidal_rule_strip_num(
 		trace!(%sum, "Finished sum");
 
 		#[cfg(feature = "debug")]
-		debug!(?m_values, "Middle values");
+		{
+			let m_values: Vec<f64> = m_values.iter().map(|x| x.into()).collect();
+			let mut m_message = String::from("M = ");
+			m_message.push_str(&format!("{:.4}", m_values.first().unwrap_or(&0.0)));
+			for v in m_values.iter().skip(1) {
+				m_message.push_str(&format!(" + {:.4}", v));
+			}
+			let sum: f64 = m_values.iter().sum();
+			m_message.push_str(&format!(" = {:.4}", sum));
+			debug!(?m_values, %m_message, "Middle values");
+		}
 
 		sum
 	};
 
-	let ret = &(strip_delta.div_rpsp(&Scientific!(2.0), precision))?
+	// ret = (w / 2) * (E + 2M)
+	let ret = &(strip_width.div_rpsp(&Scientific!(2.0), precision))?
 		* &(&ends + &(&Scientific!(2.0) * &middle));
 	
-	debug!(%ret, "Finished trapezoidal rule calculation");
+	debug!(%ret, "Finished trapezoidal rule calculation: {} / 2 * ({} + 2 * {})", strip_width, ends, middle);
 
 	Ok((&ret).into())
 }
