@@ -24,11 +24,10 @@ fn main() {
 	debug!(l = %l_test, "L at x = 0.5");
 
 	const I: f64 = 0.6197;
-	let number = 20;
 	let precision = Precision::Digits(100);
 	let w = 27.0;
 	let h = 22.0;
-	info!(%number, ?precision, "Computing ...");
+	info!(?precision, "Computing ...");
 
 	let h_tl = 1.4;
 	let d_tl = |x| t_t(x) - l(x);
@@ -59,14 +58,27 @@ fn main() {
 	let V_m = A_m * w * h * h_m;
 	info!(%A_m, %V_m, "Middle areas computed ");
 
-	// let h_b = 0.5;
+	let h_b = 0.5;
+	let f_bottom = |x: f64| {
+		if (0.0..=0.5).contains(&x) {
+			e_l(x) - t_b(x)
+		} else if (0.5..=1.0).contains(&x) {
+			e_r(x) - t_b(x)
+		} else {
+			unreachable!()
+		}
+	};
+	let A_b = trapezoidal_rule_strip_num(f_bottom, 0.0, 1.0, 20, precision).unwrap();
+	let V_b = A_b * w * h * h_b;
+	info!(%A_b, %V_b, "Bottom areas computed");
 	// let A_b = trapezoidal_rule_strip_num(|x| e_l(x) - t_b(x), 0.0, 0.5, number, precision).unwrap()
 	// 	+ trapezoidal_rule_strip_num(|x| e_r(x) - t_b(x), 0.5, 1.0, number, precision).unwrap();
 	// let V_b = A_b * w * h * h_b;
 	// info!(%A_b, %V_b);
 
-	// let V_t = V_tl + V_m + V_b;
-	// info!(%V_t, "Final computed volume");
+	let A_total = A_tl + A_m + A_b;
+	let V_total = V_tl + V_m + V_b;
+	info!(%A_total, %V_total, "Final computed volume");
 
 	info!("Finished");
 }
