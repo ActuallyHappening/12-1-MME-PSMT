@@ -1,5 +1,5 @@
 use scientific::{Precision, Scientific};
-use tracing::{debug, trace};
+use tracing::{debug, instrument, trace};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -9,7 +9,8 @@ pub enum Error {
 	ConvertError(#[from] scientific::ConversionError),
 }
 
-pub fn trapezoidal_rule_strip_num(
+#[instrument(skip_all)]
+pub fn trapezoidal_rule(
 	func: impl Fn(f64) -> f64,
 	bottom_a: f64,
 	top_b: f64,
@@ -31,7 +32,11 @@ pub fn trapezoidal_rule_strip_num(
 	let bottom = func(&bottom_a)?;
 	let top = func(&top_b)?;
 	let ends = &bottom + &top;
-	debug!(%bottom, %top, %ends, "Ends E = {:.4} + {:.4} = {:.4}", f64::from(&bottom), f64::from(&top), f64::from(&ends));
+	// debug!(%bottom, %top, %ends, "Ends E = {:.4} + {:.4} = {:.4}", f64::from(&bottom), f64::from(&top), f64::from(&ends));
+	debug!(%bottom, %top);
+	let m_ends = format!("Ends E = {:.4} + {:.4} = {:.4}", f64::from(&bottom), f64::from(&top), f64::from(&ends));
+	debug!(%m_ends);
+
 	let middle: Scientific = {
 		let multiples = 1..number;
 
@@ -64,7 +69,8 @@ pub fn trapezoidal_rule_strip_num(
 			}
 			let sum: f64 = m_values.iter().sum();
 			m_message.push_str(&format!(" = {:.4}", sum));
-			debug!(?m_values, %m_message, "Middle values");
+			debug!(?m_values, "Middle values");
+			debug!(%m_message);
 		}
 
 		sum
@@ -88,7 +94,7 @@ use super::*;
 	#[test]
 	fn test_zero() {
 		let func = |_| 0.0;
-		let approx = trapezoidal_rule_strip_num(func, 0.0, 10.0, 5, Precision::Digits(10)).unwrap();
+		let approx = trapezoidal_rule(func, 0.0, 10.0, 5, Precision::Digits(10)).unwrap();
 		assert_eq!(approx, 0.0);
 	}
 
@@ -96,7 +102,7 @@ use super::*;
 	fn test_constant() {
 		let c = 6.9;
 		let func = |_| c;
-		let approx = trapezoidal_rule_strip_num(func, 0.0, 10.0, 10, Precision::Digits(10)).unwrap();
+		let approx = trapezoidal_rule(func, 0.0, 10.0, 10, Precision::Digits(10)).unwrap();
 		assert_eq!(approx, c * 10.0);
 	}
 
@@ -106,7 +112,7 @@ use super::*;
 		let precision = Precision::Digits(100);
 
 		let f = |x: f64| 6.0 * x.powi(2) + 4.0 * x - 7.0;
-		let sum = trapezoidal_rule_strip_num(f, 0.0, 1.0, number, precision).unwrap();
+		let sum = trapezoidal_rule(f, 0.0, 1.0, number, precision).unwrap();
 		info!(test_sum = %sum);
 	}
 }
