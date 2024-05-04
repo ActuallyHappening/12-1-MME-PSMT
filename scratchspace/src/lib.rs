@@ -31,7 +31,7 @@ pub fn trapezoidal_rule_strip_num(
 	let bottom = func(&bottom_a)?;
 	let top = func(&top_b)?;
 	let ends = &bottom + &top;
-	debug!(%bottom, %top, %ends, "Ends (E)");
+	debug!(%bottom, %top, %ends, "Ends E = {:.4} + {:.4} = {:.4}", f64::from(&bottom), f64::from(&top), f64::from(&ends));
 	let middle: Scientific = {
 		let multiples = 1..number;
 
@@ -74,7 +74,7 @@ pub fn trapezoidal_rule_strip_num(
 	let ret = &(strip_width.div_rpsp(&Scientific!(2.0), precision))?
 		* &(&ends + &(&Scientific!(2.0) * &middle));
 	
-	debug!(%ret, "Finished trapezoidal rule calculation: {} / 2 * ({} + 2 * {})", strip_width, ends, middle);
+	debug!(%ret, "Finished trapezoidal rule calculation: {:.4} / 2 * ({:.4} + 2 * {:.4})", f64::from(&strip_width), f64::from(&ends), f64::from(&middle));
 
 	Ok((&ret).into())
 }
